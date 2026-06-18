@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::iter::once;
 use std::path::PathBuf;
 
-use bytes::BytesMut;
+use bytes::{BufMut, BytesMut};
 use docker_credential::DockerCredential;
 use oci_client::manifest::{OciDescriptor, OciManifest};
 use oci_client::secrets::RegistryAuth;
@@ -72,35 +72,41 @@ pub(super) async fn run(args: Args) -> anyhow::Result<()> {
     let mut image_config = ImageConfiguration::from_reader(image_config.as_bytes())?;
 
     // Build the image layer.
-    let mut buffer = BytesMut::new();
-    let (diff_id, digest) = {
-        // Build the source pipe.
-        let source = OsSource::new(args.source);
+    let buffer = BytesMut::new();
+    let mut writer = buffer.writer();
 
-        // Build the destination pipe.
-        // Note that Diff ID is calculated from the uncompressed buffer, while Digest is calculated
-        // from the compressed one.
-        let mut digest_writer = HashedWriter::new(Sha256::new(), buffer.as_mut());
-        let mut diff_id_writer =
-            HashedWriter::new(Sha256::new(), zstd::Encoder::new(&mut digest_writer, 0)?);
-        let destination = TarDestination::new(
-            &mut diff_id_writer,
-            args.uid.unwrap_or(0),
-            args.gid.unwrap_or(0),
-        );
+    // Build the source pipe.
+    let source = OsSource::new(args.source);
 
-        Builder::new(
-            source,
-            destination,
-            args.root_dir.unwrap_or_else(|| "/".to_string()),
-        )
-        .build()?;
+    // Build the destination pipe.
+    // Note that Diff ID is calculated from the uncompressed buffer, while Digest is calculated
+    // from the compressed one.
+    let mut digest_writer = HashedWriter::new(Sha256::new(), &mut writer);
+    let mut zstd_encoder = zstd::Encoder::new(&mut digest_writer, 0)?;
+    let mut diff_id_writer = HashedWriter::new(Sha256::new(), &mut zstd_encoder);
+    let destination = TarDestination::new(
+        &mut diff_id_writer,
+        args.uid.unwrap_or(0),
+        args.gid.unwrap_or(0),
+    );
 
-        (
-            format_digest(diff_id_writer.finalize().into()),
-            format_digest(digest_writer.finalize().into()),
-        )
-    };
+    let builder = Builder::new(
+        &source,
+        &destination,
+        args.root_dir.unwrap_or_else(|| "/".to_string()),
+    );
+
+    builder.build()?;
+    drop(builder);
+
+    destination.finalize()?;
+    drop(destination);
+
+    let diff_id = format_digest(diff_id_writer.finalize().into());
+    zstd_encoder.finish()?;
+
+    let digest = format_digest(digest_writer.finalize().into());
+    let buffer = writer.into_inner().freeze();
 
     // Append the Diff ID to the image config.
     image_config.rootfs_mut().diff_ids_mut().push(diff_id);
@@ -119,7 +125,6 @@ pub(super) async fn run(args: Args) -> anyhow::Result<()> {
         ..Default::default()
     });
 
-    let buffer = buffer.freeze();
     let manifest = OciManifest::Image(manifest);
 
     if args.push {

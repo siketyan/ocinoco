@@ -25,6 +25,10 @@ impl<W: Write> TarDestination<W> {
         }
     }
 
+    pub(crate) fn finalize(&self) -> std::io::Result<()> {
+        self.builder.lock().unwrap().finish()
+    }
+
     fn create_dir(&self, path: &Path) -> std::io::Result<()> {
         debug!(path = %path.display(), "Creating directory");
 

@@ -8,14 +8,14 @@ use tracing::debug;
 use crate::fs::{Destination, DirEntry, Source};
 
 /// Builder copies the files from the source to the destination.
-pub(crate) struct Builder<S: Source, D: Destination> {
-    source: S,
-    destination: D,
+pub(crate) struct Builder<'a, S: Source, D: Destination> {
+    source: &'a S,
+    destination: &'a D,
     root_dir: PathBuf,
 }
 
-impl<S: Source, D: Destination> Builder<S, D> {
-    pub(crate) fn new(source: S, destination: D, root_dir: impl Into<PathBuf>) -> Self {
+impl<'a, S: Source, D: Destination> Builder<'a, S, D> {
+    pub(crate) fn new(source: &'a S, destination: &'a D, root_dir: impl Into<PathBuf>) -> Self {
         Self {
             source,
             destination,
@@ -157,9 +157,7 @@ mod tests {
 
         let destination = RecordingDestination::default();
 
-        Builder::new(source, destination.clone(), "/")
-            .build()
-            .unwrap();
+        Builder::new(&source, &destination, "/").build().unwrap();
 
         assert_eq!(
             destination.events.lock().unwrap().as_slice(),
@@ -185,9 +183,7 @@ mod tests {
 
         let destination = RecordingDestination::default();
 
-        Builder::new(source, destination.clone(), "/")
-            .build()
-            .unwrap();
+        Builder::new(&source, &destination, "/").build().unwrap();
 
         assert_eq!(
             destination.events.lock().unwrap().as_slice(),
@@ -213,9 +209,7 @@ mod tests {
 
         let destination = RecordingDestination::default();
 
-        Builder::new(source, destination.clone(), "/")
-            .build()
-            .unwrap();
+        Builder::new(&source, &destination, "/").build().unwrap();
 
         assert_eq!(
             destination.events.lock().unwrap().as_slice(),
@@ -250,9 +244,7 @@ mod tests {
 
         let destination = RecordingDestination::default();
 
-        Builder::new(source, destination.clone(), "/app")
-            .build()
-            .unwrap();
+        Builder::new(&source, &destination, "/app").build().unwrap();
 
         let events = destination.events.lock().unwrap();
 

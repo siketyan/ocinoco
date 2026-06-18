@@ -47,8 +47,8 @@ pub(super) async fn run(args: Args) -> anyhow::Result<()> {
             TarDestination::new(&mut encoder, args.uid.unwrap_or(0), args.gid.unwrap_or(0));
 
         Builder::new(
-            source,
-            destination,
+            &source,
+            &destination,
             args.root_dir.unwrap_or_else(|| "/".to_string()),
         )
         .build()?;
