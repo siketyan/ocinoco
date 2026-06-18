@@ -3,7 +3,7 @@ name = "ocinoco"
 description = "Build OCI image with no container"
 repository = "https://github.com/siketyan/ocinoco"
 license = "MIT"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 rust-version = "1.96.0"
 
