@@ -66,6 +66,11 @@ cargo install ocinoco
 
 ## Usage
 
+> [!IMPORTANT]
+> Make sure the environment used for the build matches the image's runtime environment (platform).
+> For example, some npm packages resolve native binaries during installation,
+> so building in an environment that differs from the runtime may cause them to stop working.
+
 ### Create an OCI Image
 
 The `build` command creates an OCI layer in `tar.zst` format from the specified directory, then creates an OCI image
