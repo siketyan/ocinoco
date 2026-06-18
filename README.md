@@ -1,4 +1,4 @@
-# ocinoco - Build <u>**OCI**</u> Image with <u>**no**</u> <u>**co**</u>ntainer
+# ocinoco - Build <ins>**OCI**</ins> Image with <ins>**no**</ins> <ins>**co**</ins>ntainer
 
 _English_ | [日本語](README.ja.md)
 
