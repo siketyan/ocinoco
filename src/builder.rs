@@ -71,6 +71,7 @@ impl<S: Source, D: Destination> Builder<S, D> {
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use std::io::ErrorKind;
     use std::path::PathBuf;
     use std::sync::{Arc, Mutex};
 
