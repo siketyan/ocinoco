@@ -1,0 +1,31 @@
+[package]
+name = "ocinoco"
+description = "Build OCI image with no container"
+repository = "https://github.com/siketyan/ocinoco"
+license = "MIT"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.96.0"
+
+[dependencies]
+anyhow = "1.0.102"
+bytes = "1.12.0"
+clap = { version = "4.6.1", features = ["derive"] }
+dashmap = "6.2.1"
+docker_credential = "1.4.0"
+hex = "0.4.3"
+oci-client = "0.17.0"
+oci-spec = "0.9.0"
+pathdiff = "0.2.3"
+rayon = "1.12.0"
+sha2 = "0.11.0"
+tar = "0.4.46"
+tokio = { version = "1.52.3", features = ["macros", "rt-multi-thread"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+zstd = "0.13.3"
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
